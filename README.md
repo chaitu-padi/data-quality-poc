@@ -1,11 +1,42 @@
 # Data Quality Rule Recommendation Engine
 
-An advanced data quality rule recommendation system that uses Large Language Models (LLM) to dynamically generate, analyze, and enhance data quality rules based on your data, business context, and metadata.
+An advanced data quality rule recommendation system that leverages GPT-4 and vector embeddings to dynamically generate, analyze, and enhance data quality rules based on your data, business context, and metadata.
+
+## Key Features
+
+### 🤖 AI-Powered Analysis
+- **GPT-4 Integration**: Intelligent rule generation using OpenAI's GPT-4
+- **Vector Similarity**: ChromaDB for efficient semantic search
+- **Hybrid Approach**: Combines traditional rules with AI recommendations
+- **Context-Aware**: Incorporates business glossary, technical metadata, and data lineage
+- **Automated Learning**: Improves recommendations based on data patterns
+
+### 📊 Comprehensive Analysis
+- **Multi-level Analysis**:
+  - Column-level patterns and constraints
+  - Dataset-level relationships
+  - Cross-column dependencies
+  - Business context integration
+- **Statistical Analysis**:
+  - Distribution patterns
+  - Outlier detection
+  - Seasonality analysis
+  - Format consistency
+  - Correlation analysis
+- **YData Profiling**: Detailed statistical profiling
+
+### 🏗️ Modern Architecture
+- **Flask Backend**: High-performance API server
+- **Vector Database**: ChromaDB for semantic search
+- **LLM Integration**: GPT-4 via OpenAI API
+- **Modular Design**: Easily extensible architecture
+- **Error Handling**: Robust error management and logging
 
 ## Quick Start
 
 ### Prerequisites
 - Python 3.8 or higher
+- OpenAI API key
 - pip (Python package installer)
 - Virtual environment (recommended)
 
@@ -33,21 +64,72 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. **Run the application**
+4. **Set up environment variables**
+```bash
+# Windows
+set OPENAI_API_KEY=your_api_key_here
+
+# Linux/Mac
+export OPENAI_API_KEY=your_api_key_here
+```
+
+5. **Run the application**
 ```bash
 python app.py
 ```
 
-5. **Access the application**
-- Open your browser and navigate to: `http://localhost:5000`
-- Upload a CSV file to get data quality recommendations
+6. **Access the application**
+Open your browser and navigate to: `http://localhost:5000`
 
-## Features
+## LLM Integration Details
 
-### Dynamic Rule Generation
-- **AI-Powered Analysis**: Intelligent rule generation using advanced algorithms
-- **Context-Aware Recommendations**: Incorporates business glossary, technical metadata, and data lineage
-- **Automatic Rule Generation**: Identifies patterns and suggests appropriate data quality rules
+### GPT-4 Implementation
+
+The system uses GPT-4 for intelligent rule generation in two ways:
+
+1. **Column-Level Analysis**:
+```python
+prompt = f"""
+Column: {column_name}
+Data Type: {data_type}
+Sample Values: {sample_values}
+Technical Metadata: {technical_metadata}
+Business Context: {business_terms}
+
+Recommend appropriate data quality rules for this column.
+"""
+```
+
+2. **Dataset-Level Analysis**:
+```python
+prompt = f"""
+Dataset Info: {dataset_stats}
+Column Relationships: {correlations}
+Business Rules: {business_rules}
+
+Recommend dataset-level quality rules.
+"""
+```
+
+### Prompt Engineering
+
+The system uses carefully crafted prompts that:
+1. Focus on specific aspects of data quality
+2. Include relevant context and metadata
+3. Request structured JSON responses
+4. Handle edge cases and errors
+
+Example response format:
+```json
+{
+    "rule_type": "validity",
+    "rule_name": "Email Format Validation",
+    "description": "Ensures email addresses follow standard format",
+    "severity": "HIGH",
+    "sql_rule": "regexp_matches(email, '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$')",
+    "business_impact": "Critical for customer communication"
+}
+```
 
 ### Comprehensive Analysis
 - **Statistical Pattern Detection**: Advanced algorithms for pattern recognition
@@ -67,7 +149,7 @@ python app.py
 
 ```
 data-quality-poc/
-├── app.py                    # Main Flask application
+├── app.py                    # Main Flask application with GPT-4 integration
 ├── requirements.txt          # Python dependencies
 ├── templates/               # Flask templates
 │   ├── base.html           # Base template with common structure
@@ -79,11 +161,59 @@ data-quality-poc/
 │       └── main.js        # Frontend JavaScript
 ├── data/                  # Sample and configuration data
 │   ├── sample_customer_data.csv   # Example dataset
-│   ├── business_glossary.json     # Business terms
-│   ├── technical_metadata.json    # Schema information
-│   ├── data_lineage.json         # Data flow info
+│   ├── business_glossary.json     # Business terms for vector search
+│   ├── technical_metadata.json    # Schema and constraints
+│   ├── data_lineage.json         # Data flow information
 │   └── standard_rules.json       # Rule templates
-└── README.md              # This documentation
+├── chromadb/              # Vector database storage
+├── tests/                 # Unit and integration tests
+│   ├── test_app.py       # Application tests
+│   ├── test_llm.py       # LLM integration tests
+│   └── test_rules.py     # Rule generation tests
+└── README.md             # This documentation
+
+## Performance Optimization
+
+### 1. Batch Processing
+- Process multiple columns in parallel
+- Cache similar rule recommendations
+- Reuse vector embeddings
+
+### 2. Memory Management
+- Stream large CSV files
+- Limit sample sizes for analysis
+- Clear cache periodically
+
+## Roadmap
+
+### Phase 1: Enhanced AI Integration
+- [ ] Integration with Claude/GPT-4 Turbo
+- [ ] Fine-tuned models for specific industries
+- [ ] Active learning from user feedback
+
+### Phase 2: Advanced Features
+- [ ] Real-time data quality monitoring
+- [ ] Automated rule adjustment
+- [ ] Custom rule template generator
+
+### Phase 3: Enterprise Features
+- [ ] Multi-user support
+- [ ] Role-based access control
+- [ ] Audit logging
+- [ ] API rate limiting
+
+## Security Considerations
+
+1. **Data Privacy**:
+   - Data masking for sensitive fields
+   - PII detection and handling
+   - Secure API communication
+
+2. **API Security**:
+   - Rate limiting
+   - Authentication
+   - Input validation
+   - CORS configuration
 ```
 
 ## Configuration Files
@@ -106,7 +236,77 @@ Contains business terms and their definitions used for context-aware rule genera
 }
 ```
 
-## Usage
+## Advanced Usage Examples
+
+### 1. Custom Rule Templates
+
+Add custom rule templates to `standard_rules.json`:
+```json
+{
+    "rule_categories": {
+        "address_validation": {
+            "description": "Address format validation rules",
+            "rules": [
+                {
+                    "rule_name": "Postal Code Format",
+                    "description": "Validates postal code format",
+                    "rule_type": "format",
+                    "sql_template": "regexp_matches({column}, '^\\d{5}(-\\d{4})?$')",
+                    "applicable_data_types": ["string", "varchar"]
+                }
+            ]
+        }
+    }
+}
+```
+
+### 2. Custom LLM Prompts
+
+Modify the system prompt for specific use cases:
+```python
+system_prompt = """
+You are a data quality expert specializing in financial data.
+Focus on:
+1. Regulatory compliance
+2. Financial accuracy
+3. Audit requirements
+...
+"""
+```
+
+### 3. Vector Search Integration
+
+Use ChromaDB for semantic search:
+```python
+results = business_glossary_collection.query(
+    query_texts=[f"{column_name} {data_type}"],
+    n_results=3
+)
+```
+
+## Error Handling and Logging
+
+### 1. LLM Error Recovery
+```python
+try:
+    response = get_llm_recommendations(column)
+except Exception as e:
+    logger.error(f"LLM error: {str(e)}")
+    return fallback_recommendations(column)
+```
+
+### 2. Data Type Serialization
+```python
+def convert_to_serializable(obj):
+    """Handle complex data types for JSON serialization"""
+    if hasattr(obj, 'tolist'):  # numpy arrays
+        return obj.tolist()
+    elif hasattr(obj, 'item'):  # numpy scalars
+        return obj.item()
+    # ... more handlers
+```
+
+## Basic Usage
 
 1. **Upload CSV File**: Select and upload your CSV dataset
 2. **Automated Analysis**: The system will:
