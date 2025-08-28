@@ -13,7 +13,30 @@ from typing import Any, Dict, List, Union
 import openai
 
 def convert_to_serializable(obj: Any) -> Union[Dict, List, str, int, float, bool, None]:
-    """Convert complex objects to JSON serializable types."""
+    """
+    Convert complex data types (numpy, pandas) to JSON serializable Python types.
+    
+    This function handles various special cases:
+    - NumPy arrays and scalars
+    - Pandas Series and DataFrames
+    - NA/NaN values
+    - Custom objects with __dict__
+    - Nested data structures
+    
+    Args:
+        obj (Any): The object to convert
+        
+    Returns:
+        Union[Dict, List, str, int, float, bool, None]: JSON serializable version of the input
+        
+    Examples:
+        >>> convert_to_serializable(np.array([1, 2, 3]))
+        [1, 2, 3]
+        >>> convert_to_serializable(pd.Series([1, 2, 3]))
+        [1, 2, 3]
+        >>> convert_to_serializable(pd.NA)
+        None
+    """
     if hasattr(obj, 'tolist'):  # numpy arrays
         return obj.tolist()
     elif hasattr(obj, 'item'):  # numpy scalars
@@ -39,7 +62,40 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs('data', exist_ok=True)
 
 class DataQualityRuleRecommendationEngine:
+    """
+    A comprehensive data quality rule recommendation engine that combines traditional rule-based analysis 
+    with AI-powered recommendations using GPT-4.
+
+    Key Features:
+    - Vector-based knowledge storage using ChromaDB for business glossary and standard rules
+    - GPT-4 powered intelligent rule recommendations
+    - Hybrid approach combining predefined rules with AI-generated suggestions
+    - Contextual analysis using technical metadata and data lineage
+    - Detailed error logging and serialization handling
+
+    LLM Integration:
+    - Model: GPT-4
+    - Use Cases:
+        1. Column-level rule recommendations based on context
+        2. Dataset-level pattern recognition
+        3. Business impact assessment
+        4. Custom rule generation
+    - Prompt Engineering:
+        - System prompt focuses on data quality expertise
+        - Context includes metadata, lineage, and business glossary terms
+        - Structured JSON output format for consistency
+
+    Requirements:
+    - OpenAI API key set in environment variables
+    - ChromaDB for vector storage
+    - Supporting metadata files (business_glossary.json, standard_rules.json, etc.)
+    """
+    
     def __init__(self):
+        """
+        Initialize the recommendation engine with ChromaDB vector storage and required collections.
+        Sets up persistent storage for business glossary and standard rules.
+        """
         # Initialize ChromaDB client
         self.client = chromadb.PersistentClient(path="./chromadb")
 
@@ -166,7 +222,47 @@ class DataQualityRuleRecommendationEngine:
 
     def analyze_data_and_recommend_rules(self, df, technical_metadata, data_lineage):
         """
-        Analyze the dataset and recommend ALL rules (standard and custom) using OpenAI LLM inference only.
+        Analyze the dataset and recommend data quality rules using a hybrid approach combining
+        GPT-4 LLM inference with traditional rule-based analysis.
+
+        Args:
+            df (pd.DataFrame): The input dataset to analyze
+            technical_metadata (dict): Technical metadata including constraints, data types, etc.
+            data_lineage (dict): Information about data sources and transformations
+
+        Returns:
+            list: List of recommended rules, each containing:
+                - rule_type: Type of rule (completeness, validity, etc.)
+                - rule_name: Descriptive name of the rule
+                - description: Detailed explanation
+                - severity: CRITICAL, HIGH, MEDIUM, or LOW
+                - column: Affected column(s)
+                - sql_rule: SQL implementation of the check
+                - business_impact: Business context and importance
+                - recommendation_reason: Explanation of why this rule was recommended
+
+        LLM Integration Details:
+            - Uses GPT-4 for column-level and dataset-level analysis
+            - Prompt Engineering:
+                1. Column Analysis:
+                   - Includes: column name, data type, sample values, technical metadata,
+                     lineage info, business glossary terms, and standard rules
+                   - Focuses on specific column characteristics and patterns
+                
+                2. Dataset Analysis:
+                   - Analyzes relationships between columns
+                   - Identifies dataset-level patterns and constraints
+                   - Suggests cross-column validation rules
+
+            - Error Handling:
+                - Fallback to basic rules if LLM fails
+                - Detailed error logging
+                - JSON validation and correction
+                
+            - Output Processing:
+                - JSON structure validation
+                - Conversion to consistent format
+                - Integration with standard rules
         """
         recommendations = []
         try:
@@ -603,6 +699,36 @@ def convert_all_numpy(obj):
         return convert_to_serializable(obj)
 
 def process_csv_file(filepath, filename):
+    """
+    Process an uploaded CSV file to generate data quality recommendations.
+    
+    This function orchestrates the entire analysis process:
+    1. Loads and validates the CSV file
+    2. Processes supporting metadata (technical, lineage, business glossary)
+    3. Generates a data profiling report
+    4. Uses the recommendation engine to analyze data and generate rules
+    5. Formats and returns the results with proper error handling
+    
+    Integration Points:
+    - YData Profiling for statistical analysis
+    - GPT-4 for intelligent rule recommendations
+    - ChromaDB for knowledge base queries
+    
+    Args:
+        filepath (str): Path to the uploaded CSV file
+        filename (str): Original name of the file
+        
+    Returns:
+        Flask.Response: JSON response containing:
+            - dataset_info: Basic statistics about the dataset
+            - recommendations: List of recommended data quality rules
+            - recommendation_summary: Counts of rules by severity
+            
+    Error Handling:
+    - Detailed error logging with full traceback
+    - Proper type conversion for JSON serialization
+    - Graceful failure modes with informative error messages
+    """
     try:
         print(f"Processing file: {filename}")
         # Read the CSV file
