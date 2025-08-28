@@ -1,0 +1,147 @@
+{
+  "version": "1.0",
+  "rule_categories": {
+    "completeness": {
+      "description": "Rules to check for missing or null values",
+      "rules": [
+        {
+          "rule_id": "completeness_check",
+          "rule_name": "Null Value Check",
+          "rule_type": "completeness",
+          "description": "Check for null or empty values in required fields",
+          "severity": "HIGH",
+          "sql_template": "SELECT COUNT(*) as null_count FROM {table} WHERE {column} IS NULL OR {column} = ''",
+          "threshold": 0,
+          "applicable_data_types": [
+            "VARCHAR",
+            "INTEGER",
+            "DATE",
+            "DECIMAL"
+          ]
+        },
+        {
+          "rule_id": "completeness_percentage",
+          "rule_name": "Completeness Percentage",
+          "rule_type": "completeness",
+          "description": "Calculate percentage of complete values",
+          "severity": "MEDIUM",
+          "sql_template": "SELECT (COUNT(*) - COUNT(CASE WHEN {column} IS NULL OR {column} = '' THEN 1 END)) * 100.0 / COUNT(*) as completeness_pct FROM {table}",
+          "threshold": 95.0,
+          "applicable_data_types": [
+            "ALL"
+          ]
+        }
+      ]
+    },
+    "validity": {
+      "description": "Rules to check data format and constraints",
+      "rules": [
+        {
+          "rule_id": "email_format_check",
+          "rule_name": "Email Format Validation",
+          "rule_type": "validity",
+          "description": "Check if email addresses follow standard format",
+          "severity": "HIGH",
+          "sql_template": "SELECT COUNT(*) as invalid_emails FROM {table} WHERE {column} IS NOT NULL AND {column} NOT REGEXP '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'",
+          "threshold": 0,
+          "applicable_data_types": [
+            "VARCHAR"
+          ],
+          "applicable_columns": [
+            "email",
+            "email_address",
+            "contact_email"
+          ]
+        },
+        {
+          "rule_id": "range_check",
+          "rule_name": "Numeric Range Validation",
+          "rule_type": "validity",
+          "description": "Check if numeric values fall within expected ranges",
+          "severity": "MEDIUM",
+          "sql_template": "SELECT COUNT(*) as out_of_range FROM {table} WHERE {column} IS NOT NULL AND ({column} < {min_value} OR {column} > {max_value})",
+          "threshold": 0,
+          "applicable_data_types": [
+            "INTEGER",
+            "DECIMAL",
+            "FLOAT"
+          ]
+        },
+        {
+          "rule_id": "date_format_check",
+          "rule_name": "Date Format Validation",
+          "rule_type": "validity",
+          "description": "Check if dates are in correct format and valid",
+          "severity": "HIGH",
+          "sql_template": "SELECT COUNT(*) as invalid_dates FROM {table} WHERE {column} IS NOT NULL AND NOT({column} REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' AND STR_TO_DATE({column}, '%Y-%m-%d') IS NOT NULL)",
+          "threshold": 0,
+          "applicable_data_types": [
+            "DATE",
+            "VARCHAR"
+          ]
+        }
+      ]
+    },
+    "consistency": {
+      "description": "Rules to check data consistency and relationships",
+      "rules": [
+        {
+          "rule_id": "uniqueness_check",
+          "rule_name": "Uniqueness Validation",
+          "rule_type": "consistency",
+          "description": "Check for duplicate values in unique columns",
+          "severity": "HIGH",
+          "sql_template": "SELECT {column}, COUNT(*) as duplicate_count FROM {table} WHERE {column} IS NOT NULL GROUP BY {column} HAVING COUNT(*) > 1",
+          "threshold": 0,
+          "applicable_data_types": [
+            "ALL"
+          ]
+        },
+        {
+          "rule_id": "referential_integrity",
+          "rule_name": "Foreign Key Validation",
+          "rule_type": "consistency",
+          "description": "Check referential integrity between related tables",
+          "severity": "HIGH",
+          "sql_template": "SELECT COUNT(*) as orphan_records FROM {table} t1 LEFT JOIN {reference_table} t2 ON t1.{column} = t2.{reference_column} WHERE t1.{column} IS NOT NULL AND t2.{reference_column} IS NULL",
+          "threshold": 0,
+          "applicable_data_types": [
+            "ALL"
+          ]
+        }
+      ]
+    },
+    "accuracy": {
+      "description": "Rules to check data accuracy against known standards",
+      "rules": [
+        {
+          "rule_id": "domain_value_check",
+          "rule_name": "Domain Value Validation",
+          "rule_type": "accuracy",
+          "description": "Check if values belong to predefined domain",
+          "severity": "MEDIUM",
+          "sql_template": "SELECT COUNT(*) as invalid_domain_values FROM {table} WHERE {column} IS NOT NULL AND {column} NOT IN ({domain_values})",
+          "threshold": 0,
+          "applicable_data_types": [
+            "VARCHAR",
+            "INTEGER"
+          ]
+        },
+        {
+          "rule_id": "statistical_outlier",
+          "rule_name": "Statistical Outlier Detection",
+          "rule_type": "accuracy",
+          "description": "Identify statistical outliers using standard deviation",
+          "severity": "LOW",
+          "sql_template": "WITH stats AS (SELECT AVG({column}) as mean_val, STDDEV({column}) as std_val FROM {table} WHERE {column} IS NOT NULL) SELECT COUNT(*) as outlier_count FROM {table}, stats WHERE {column} IS NOT NULL AND ABS({column} - mean_val) > 3 * std_val",
+          "threshold": "5%",
+          "applicable_data_types": [
+            "INTEGER",
+            "DECIMAL",
+            "FLOAT"
+          ]
+        }
+      ]
+    }
+  }
+}

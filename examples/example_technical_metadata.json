@@ -1,0 +1,71 @@
+{
+  "database": "customer_db",
+  "schema": "public",
+  "table": "customer_transactions",
+  "description": "Customer transaction records with associated metadata",
+  "last_updated": "2025-08-28",
+  "columns": [
+    {
+      "name": "customer_email",
+      "data_type": "VARCHAR",
+      "length": 255,
+      "nullable": false,
+      "unique": true,
+      "primary_key": false,
+      "foreign_key": null,
+      "validation_pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+      "description": "Primary email address for customer",
+      "pii": true,
+      "encryption": "none",
+      "indexes": ["idx_customer_email"]
+    },
+    {
+      "name": "transaction_amount",
+      "data_type": "DECIMAL",
+      "precision": 10,
+      "scale": 2,
+      "nullable": false,
+      "unique": false,
+      "min_value": 0.01,
+      "max_value": 1000000.00,
+      "description": "Transaction amount in base currency",
+      "validation_rules": [
+        "Must be greater than 0",
+        "Must not exceed maximum transaction limit"
+      ]
+    },
+    {
+      "name": "transaction_date",
+      "data_type": "TIMESTAMP",
+      "nullable": false,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP",
+      "description": "Date and time of transaction",
+      "validation_rules": [
+        "Must not be in future",
+        "Must not be before system start date"
+      ]
+    }
+  ],
+  "constraints": [
+    {
+      "type": "CHECK",
+      "name": "chk_transaction_amount_positive",
+      "definition": "transaction_amount > 0"
+    },
+    {
+      "type": "UNIQUE",
+      "name": "unq_customer_email",
+      "columns": ["customer_email"]
+    }
+  ],
+  "partitioning": {
+    "type": "RANGE",
+    "column": "transaction_date",
+    "interval": "MONTH"
+  },
+  "retention_policy": {
+    "duration": "7 years",
+    "archive_after": "1 year"
+  }
+}

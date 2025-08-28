@@ -1,0 +1,70 @@
+{
+  "version": "1.0",
+  "created_date": "2025-08-28",
+  "domain": "Customer Data Management",
+  "glossary": {
+    "terms": [
+      {
+        "id": "customer_id",
+        "name": "Customer ID",
+        "definition": "Unique identifier assigned to each customer in the system",
+        "business_rules": [
+          "Must be unique across all customers",
+          "Format: CUST_XXXXX where X is a 5-digit number",
+          "Cannot be null or empty"
+        ],
+        "data_steward": "Customer Data Team",
+        "domain": "Customer Management",
+        "synonyms": [
+          "Customer Identifier",
+          "Client ID"
+        ],
+        "related_terms": [
+          "customer_profile",
+          "customer_record"
+        ]
+      },
+      {
+        "id": "email",
+        "name": "Email Address",
+        "definition": "Primary email address of the customer for communication",
+        "business_rules": [
+          "Must follow standard email format (user@domain.com)",
+          "Should be unique per customer",
+          "Required for active customers"
+        ],
+        "data_steward": "Customer Data Team",
+        "domain": "Customer Contact",
+        "data_quality_requirements": {
+          "completeness": "95%",
+          "validity": "100% valid email format"
+        }
+      },
+      {
+        "id": "age",
+        "name": "Customer Age",
+        "definition": "Age of the customer in years",
+        "business_rules": [
+          "Must be between 18-120 years",
+          "Cannot be negative",
+          "Should be reasonably consistent with hire_date if employee"
+        ],
+        "data_steward": "HR Data Team",
+        "domain": "Demographics"
+      },
+      {
+        "id": "salary",
+        "name": "Employee Salary",
+        "definition": "Annual salary of the employee in USD",
+        "business_rules": [
+          "Must be positive value",
+          "Minimum wage compliance required",
+          "Should be within department salary ranges"
+        ],
+        "data_steward": "HR Data Team",
+        "domain": "Compensation",
+        "sensitivity_level": "Confidential"
+      }
+    ]
+  }
+}

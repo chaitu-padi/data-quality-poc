@@ -1,0 +1,60 @@
+{
+  "glossary": {
+    "terms": [
+      {
+        "id": "CUST_EMAIL",
+        "name": "Customer Email",
+        "definition": "Primary email address for customer communication",
+        "business_rules": [
+          "Must be valid email format",
+          "Must be unique per customer",
+          "Should not be from disposable email providers"
+        ],
+        "domain": "Customer Data",
+        "aliases": ["email", "contact_email", "primary_email"],
+        "data_type": "email",
+        "sensitivity": "PII"
+      },
+      {
+        "id": "CUST_NAME",
+        "name": "Customer Name",
+        "definition": "Full legal name of the customer",
+        "business_rules": [
+          "Must not contain numbers or special characters",
+          "Should be properly capitalized",
+          "Maximum length of 100 characters"
+        ],
+        "domain": "Customer Data",
+        "aliases": ["full_name", "legal_name"],
+        "data_type": "string",
+        "sensitivity": "PII"
+      },
+      {
+        "id": "TRANSACTION_AMT",
+        "name": "Transaction Amount",
+        "definition": "Monetary value of the transaction in base currency",
+        "business_rules": [
+          "Must be greater than 0",
+          "Should not exceed maximum transaction limit",
+          "Must be in base currency"
+        ],
+        "domain": "Financial Data",
+        "aliases": ["amount", "transaction_value"],
+        "data_type": "decimal",
+        "precision": 2
+      }
+    ],
+    "domains": {
+      "Customer Data": {
+        "description": "Core customer information",
+        "data_owner": "Customer Service Department",
+        "compliance": ["GDPR", "CCPA"]
+      },
+      "Financial Data": {
+        "description": "Transaction and monetary information",
+        "data_owner": "Finance Department",
+        "compliance": ["SOX", "PCI-DSS"]
+      }
+    }
+  }
+}

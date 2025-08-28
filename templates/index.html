@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}Data Quality Rules Recommendation{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="hero-section text-center mb-5">
+            <h1 class="display-4 text-primary mb-3">
+                <i class="fas fa-magic me-3"></i>
+                Data Quality Rules Recommendation Engine
+            </h1>
+            <p class="lead text-muted mb-4">
+                Upload your CSV data and get AI-powered data quality rule recommendations based on 
+                business glossary, technical metadata, and data lineage information.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- File Upload Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-upload me-2"></i>
+                    Upload CSV Dataset
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="csvFile" class="form-label">Select CSV File</label>
+                        <input type="file" class="form-control" id="csvFile" name="file" accept=".csv" required>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Maximum file size: 16MB. Only CSV files are supported.
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Analyze & Get Recommendations
+                    </button>
+                </form>
+
+                <!-- Progress Bar -->
+                <div id="uploadProgress" class="mt-3" style="display: none;">
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 100%"></div>
+                    </div>
+                    <div class="text-center mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-cog fa-spin me-2"></i>
+                            Processing your data and generating recommendations...
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Overview -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 border-0 bg-light">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-robot fa-3x text-primary"></i>
+                        </div>
+                        <h5>AI-Powered Analysis</h5>
+                        <p class="text-muted small">
+                            Uses GenAI and vector databases to recommend relevant data quality rules
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 border-0 bg-light">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-database fa-3x text-success"></i>
+                        </div>
+                        <h5>Multi-Context Analysis</h5>
+                        <p class="text-muted small">
+                            Considers business glossary, technical metadata, and data lineage
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Section -->
+<div id="resultsSection" class="row mt-5" style="display: none;">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-clipboard-check me-2"></i>
+                    Data Quality Recommendations
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Dataset Overview -->
+                <div id="datasetOverview" class="mb-4"></div>
+
+                <!-- Recommendations Summary -->
+                <div id="recommendationsSummary" class="mb-4"></div>
+
+                <!-- Detailed Recommendations -->
+                <div id="detailedRecommendations"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Alert -->
+<div id="errorAlert" class="alert alert-danger" style="display: none;" role="alert">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <span id="errorMessage"></span>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const resultsSection = document.getElementById('resultsSection');
+    const errorAlert = document.getElementById('errorAlert');
+
+    uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData();
+        const fileInput = document.getElementById('csvFile');
+
+        if (!fileInput.files.length) {
+            showError('Please select a CSV file to upload.');
+            return;
+        }
+
+        formData.append('file', fileInput.files[0]);
+
+        // Show progress
+        uploadProgress.style.display = 'block';
+        resultsSection.style.display = 'none';
+        errorAlert.style.display = 'none';
+
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            uploadProgress.style.display = 'none';
+
+            if (data.error) {
+                showError(data.error);
+            } else {
+                displayResults(data);
+            }
+        })
+        .catch(error => {
+            uploadProgress.style.display = 'none';
+            showError('An error occurred while processing the file: ' + error.message);
+        });
+    });
+
+    function showError(message) {
+        errorAlert.style.display = 'block';
+        document.getElementById('errorMessage').textContent = message;
+        resultsSection.style.display = 'none';
+    }
+
+    function displayResults(data) {
+        // Dataset Overview
+        const overviewHtml = `
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stat-card text-center p-3 bg-light rounded">
+                        <div class="stat-number h4 text-primary">${data.dataset_info.rows.toLocaleString()}</div>
+                        <div class="stat-label">Rows</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card text-center p-3 bg-light rounded">
+                        <div class="stat-number h4 text-info">${data.dataset_info.columns}</div>
+                        <div class="stat-label">Columns</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card text-center p-3 bg-light rounded">
+                        <div class="stat-number h4 text-warning">${Object.values(data.dataset_info.missing_values).reduce((a, b) => a + b, 0).toLocaleString()}</div>
+                        <div class="stat-label">Missing Values</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card text-center p-3 bg-light rounded">
+                        <div class="stat-number h4 text-secondary">${data.dataset_info.memory_usage}</div>
+                        <div class="stat-label">Memory Usage</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.getElementById('datasetOverview').innerHTML = overviewHtml;
+
+        // Recommendations Summary
+        const summaryHtml = `
+            <div class="alert alert-info">
+                <h6><i class="fas fa-chart-pie me-2"></i>Recommendations Summary</h6>
+                <div class="row text-center">
+                    <div class="col">
+                        <span class="badge bg-danger fs-6">${data.recommendation_summary.critical_rules}</span>
+                        <small class="d-block">Critical</small>
+                    </div>
+                    <div class="col">
+                        <span class="badge bg-warning fs-6">${data.recommendation_summary.high_rules}</span>
+                        <small class="d-block">High</small>
+                    </div>
+                    <div class="col">
+                        <span class="badge bg-info fs-6">${data.recommendation_summary.medium_rules}</span>
+                        <small class="d-block">Medium</small>
+                    </div>
+                    <div class="col">
+                        <span class="badge bg-secondary fs-6">${data.recommendation_summary.low_rules}</span>
+                        <small class="d-block">Low</small>
+                    </div>
+                    <div class="col">
+                        <span class="badge bg-success fs-6">${data.recommendation_summary.total_rules}</span>
+                        <small class="d-block">Total Rules</small>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.getElementById('recommendationsSummary').innerHTML = summaryHtml;
+
+        // Detailed Recommendations
+        let recommendationsHtml = '<h6><i class="fas fa-list me-2"></i>Detailed Recommendations</h6>';
+
+        if (data.recommendations.length === 0) {
+            recommendationsHtml += '<div class="alert alert-success">No data quality issues detected! Your data looks good.</div>';
+        } else {
+            recommendationsHtml += '<div class="accordion" id="recommendationsAccordion">';
+
+            data.recommendations.forEach((rec, index) => {
+                const severityClass = {
+                    'CRITICAL': 'danger',
+                    'HIGH': 'warning', 
+                    'MEDIUM': 'info',
+                    'LOW': 'secondary'
+                }[rec.severity] || 'secondary';
+
+                recommendationsHtml += `
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#rec${index}" aria-expanded="false">
+                                <span class="badge bg-${severityClass} me-3">${rec.severity}</span>
+                                <strong>${rec.rule_name}</strong>
+                                <span class="ms-auto me-3">
+                                    <small class="text-muted">${rec.rule_type.toUpperCase()}</small>
+                                </span>
+                            </button>
+                        </h2>
+                        <div id="rec${index}" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <p><strong>Description:</strong> ${rec.description}</p>
+                                        <p><strong>Business Impact:</strong> ${rec.business_impact}</p>
+                                        <p><strong>Recommendation Reason:</strong> ${rec.recommendation_reason}</p>
+
+                                        <h6>Suggested SQL Rule:</h6>
+                                        <pre class="bg-light p-2 rounded"><code>${rec.sql_rule}</code></pre>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <h6 class="card-title">Rule Details</h6>
+                                                <p class="mb-1"><strong>Column:</strong> ${rec.column}</p>
+                                                <p class="mb-1"><strong>Type:</strong> ${rec.rule_type}</p>
+                                                <p class="mb-1"><strong>Violations:</strong> ${rec.current_violation_count}</p>
+                                                <p class="mb-0"><strong>Threshold:</strong> ${rec.expected_threshold}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            recommendationsHtml += '</div>';
+        }
+
+        document.getElementById('detailedRecommendations').innerHTML = recommendationsHtml;
+        resultsSection.style.display = 'block';
+
+        // Scroll to results
+        resultsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+});
+</script>
+{% endblock %}

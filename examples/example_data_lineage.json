@@ -1,0 +1,85 @@
+{
+  "table": "customer_transactions",
+  "columns": {
+    "customer_email": {
+      "source_systems": [
+        {
+          "system": "CRM",
+          "table": "customers",
+          "column": "email_address",
+          "transformation": "LOWER(email_address)"
+        },
+        {
+          "system": "Website",
+          "table": "user_accounts",
+          "column": "contact_email",
+          "transformation": "TRIM(LOWER(contact_email))"
+        }
+      ],
+      "downstream_systems": [
+        {
+          "system": "Marketing",
+          "table": "email_campaigns",
+          "column": "recipient_email"
+        }
+      ],
+      "data_quality_rules": [
+        "Validate email format",
+        "Check for unique values",
+        "Verify domain existence"
+      ]
+    },
+    "transaction_amount": {
+      "source_systems": [
+        {
+          "system": "Payment Gateway",
+          "table": "transactions",
+          "column": "amount",
+          "transformation": "ROUND(amount * exchange_rate, 2)"
+        }
+      ],
+      "downstream_systems": [
+        {
+          "system": "Accounting",
+          "table": "daily_transactions",
+          "column": "transaction_value"
+        },
+        {
+          "system": "Reporting",
+          "table": "financial_summary",
+          "column": "total_amount",
+          "transformation": "SUM(transaction_amount)"
+        }
+      ],
+      "data_quality_rules": [
+        "Check for positive values",
+        "Verify within transaction limits",
+        "Monitor for outliers"
+      ]
+    }
+  },
+  "update_frequency": "Real-time",
+  "dependencies": [
+    {
+      "system": "CRM",
+      "criticality": "High",
+      "sla": "5 minutes"
+    },
+    {
+      "system": "Payment Gateway",
+      "criticality": "Critical",
+      "sla": "1 minute"
+    }
+  ],
+  "impact_analysis": {
+    "upstream_impact": [
+      "Customer account updates",
+      "Payment processing delays"
+    ],
+    "downstream_impact": [
+      "Financial reporting",
+      "Marketing campaigns",
+      "Customer analytics"
+    ]
+  }
+}

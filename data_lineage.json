@@ -1,0 +1,102 @@
+{
+  "lineage_version": "1.0",
+  "created_date": "2025-08-28T07:44:05.937770",
+  "source_systems": [
+    {
+      "system_id": "hr_system",
+      "system_name": "Human Resources Management System",
+      "system_type": "OLTP",
+      "description": "Primary HR system containing employee data"
+    },
+    {
+      "system_id": "crm_system",
+      "system_name": "Customer Relationship Management",
+      "system_type": "OLTP",
+      "description": "Customer data management system"
+    }
+  ],
+  "lineage_flows": [
+    {
+      "flow_id": "hr_to_customer_etl",
+      "flow_name": "HR to Customer Data ETL",
+      "source": {
+        "system_id": "hr_system",
+        "database": "hr_prod",
+        "schema": "employees",
+        "table": "employee_master",
+        "columns": [
+          "emp_id",
+          "first_name",
+          "last_name",
+          "email",
+          "phone",
+          "age",
+          "salary",
+          "dept_code",
+          "hire_date",
+          "active_flag"
+        ]
+      },
+      "target": {
+        "system_id": "crm_system",
+        "database": "prod_crm",
+        "schema": "public",
+        "table": "customer_data",
+        "columns": [
+          "customer_id",
+          "first_name",
+          "last_name",
+          "email",
+          "phone",
+          "age",
+          "salary",
+          "department",
+          "hire_date",
+          "is_active"
+        ]
+      },
+      "transformation_rules": [
+        {
+          "rule_id": "emp_id_transform",
+          "description": "Transform employee ID to customer ID format",
+          "source_column": "emp_id",
+          "target_column": "customer_id",
+          "transformation": "CONCAT('CUST_', LPAD(emp_id, 5, '0'))"
+        },
+        {
+          "rule_id": "dept_lookup",
+          "description": "Convert department code to department name",
+          "source_column": "dept_code",
+          "target_column": "department",
+          "transformation": "CASE WHEN dept_code = 'SL' THEN 'Sales' WHEN dept_code = 'MK' THEN 'Marketing' WHEN dept_code = 'ENG' THEN 'Engineering' WHEN dept_code = 'HR' THEN 'HR' WHEN dept_code = 'FIN' THEN 'Finance' END"
+        }
+      ],
+      "schedule": "Daily at 2:00 AM",
+      "last_run": "2025-08-28T01:44:05.937784",
+      "status": "SUCCESS"
+    }
+  ],
+  "column_lineage": [
+    {
+      "target_column": "customer_data.customer_id",
+      "source_columns": [
+        "employee_master.emp_id"
+      ],
+      "transformation": "ID format transformation with CUST_ prefix"
+    },
+    {
+      "target_column": "customer_data.email",
+      "source_columns": [
+        "employee_master.email"
+      ],
+      "transformation": "Direct copy with data quality validation"
+    },
+    {
+      "target_column": "customer_data.salary",
+      "source_columns": [
+        "employee_master.salary"
+      ],
+      "transformation": "Direct copy with range validation"
+    }
+  ]
+}

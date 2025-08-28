@@ -1,0 +1,140 @@
+{
+  "schema_version": "1.0",
+  "table_name": "customer_data",
+  "database": "prod_crm",
+  "schema": "public",
+  "last_updated": "2025-08-28T07:44:05.936498",
+  "columns": [
+    {
+      "name": "customer_id",
+      "data_type": "VARCHAR",
+      "max_length": 10,
+      "nullable": false,
+      "primary_key": true,
+      "constraints": [
+        "UNIQUE",
+        "NOT NULL"
+      ],
+      "format_pattern": "CUST_[0-9]{5}",
+      "encoding": "UTF-8"
+    },
+    {
+      "name": "first_name",
+      "data_type": "VARCHAR",
+      "max_length": 50,
+      "nullable": false,
+      "constraints": [
+        "NOT NULL"
+      ],
+      "encoding": "UTF-8"
+    },
+    {
+      "name": "last_name",
+      "data_type": "VARCHAR",
+      "max_length": 50,
+      "nullable": false,
+      "constraints": [
+        "NOT NULL"
+      ],
+      "encoding": "UTF-8"
+    },
+    {
+      "name": "email",
+      "data_type": "VARCHAR",
+      "max_length": 100,
+      "nullable": true,
+      "constraints": [],
+      "format_pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+      "encoding": "UTF-8"
+    },
+    {
+      "name": "phone",
+      "data_type": "VARCHAR",
+      "max_length": 20,
+      "nullable": true,
+      "constraints": [],
+      "format_pattern": "\\+1-[0-9]{3}-[0-9]{3}-[0-9]{4}",
+      "encoding": "UTF-8"
+    },
+    {
+      "name": "age",
+      "data_type": "INTEGER",
+      "nullable": true,
+      "constraints": [
+        "CHECK (age >= 18 AND age <= 120)"
+      ],
+      "min_value": 18,
+      "max_value": 120
+    },
+    {
+      "name": "salary",
+      "data_type": "DECIMAL",
+      "precision": 10,
+      "scale": 2,
+      "nullable": true,
+      "constraints": [
+        "CHECK (salary > 0)"
+      ],
+      "min_value": 0,
+      "max_value": 999999999.99
+    },
+    {
+      "name": "department",
+      "data_type": "VARCHAR",
+      "max_length": 50,
+      "nullable": false,
+      "constraints": [
+        "NOT NULL"
+      ],
+      "allowed_values": [
+        "Sales",
+        "Marketing",
+        "Engineering",
+        "HR",
+        "Finance"
+      ],
+      "encoding": "UTF-8"
+    },
+    {
+      "name": "hire_date",
+      "data_type": "DATE",
+      "nullable": false,
+      "constraints": [
+        "NOT NULL"
+      ],
+      "format_pattern": "YYYY-MM-DD"
+    },
+    {
+      "name": "is_active",
+      "data_type": "BOOLEAN",
+      "nullable": false,
+      "constraints": [
+        "NOT NULL"
+      ],
+      "default_value": true
+    }
+  ],
+  "indexes": [
+    {
+      "name": "idx_customer_email",
+      "columns": [
+        "email"
+      ],
+      "type": "BTREE",
+      "unique": false
+    },
+    {
+      "name": "idx_customer_department",
+      "columns": [
+        "department"
+      ],
+      "type": "BTREE",
+      "unique": false
+    }
+  ],
+  "table_statistics": {
+    "estimated_row_count": 101,
+    "data_size_mb": 0.1,
+    "last_analyzed": "2025-08-28T07:44:05.936525"
+  }
+}
