@@ -32,6 +32,14 @@ An advanced data quality rule recommendation system that leverages GPT-4 and vec
 - **Modular Design**: Easily extensible architecture
 - **Error Handling**: Robust error management and logging
 
+
+<img width="1145" height="672" alt="image" src="https://github.com/user-attachments/assets/c764a1ef-6ff2-4cb2-a0f6-223bd0c4e6f7" />
+<img width="1063" height="515" alt="image" src="https://github.com/user-attachments/assets/c7bd5749-b8bb-49f4-9e75-9de8a0fd6f5c" />
+
+
+
+
+
 ## Quick Start
 
 ### Prerequisites
